@@ -8,8 +8,6 @@ from scipy import signal
 import os
 import matplotlib.pyplot as plt
 
-# Increase the stack size
-#os.system('ulimit -s unlimited; some_executable')
 
 # Read in image and convert it from uint8 to float64
  
@@ -46,15 +44,10 @@ for point, val in np.ndenumerate(building):
 	# Formula for orientation -> arctan(y_gradient / x_gradient) ""CHECK IF I NEED TO WORRY ABOUT DIVIDE BY 0
 	# plots points between -pi/2 and pi/2
 	orientation = np.arctan(y_gradient[point] / x_gradient[point])
-	#print(np.arctan(y_gradient[point] / x_gradient[point]))
-	# if orientation >= np.divide(pi,2):
-	# 	orientation = orientation - pi
 	edge_orientations[point] = orientation
 
 print("magnitude and orientation calculated")
 
-# plt.imshow(edge_orientations)
-# plt.show()
 
 # Determine the D* matrix, check each value in edge_orientations and store the angle it's closest to (0, pi/4, pi/2, 3pi/4)
 angles = [0, np.divide(pi, 4), np.divide(pi, 2), -1 * np.divide(pi,4), -1 *np.divide(pi,2)]
@@ -77,7 +70,8 @@ print("angle assignment done")
 edge_strengths_copy = np.copy(edge_strengths)
 
 
-#Don't loop through the edges
+# Thin the edges by doing non-maximum supression
+# If the strength of neighboring points along the current pixels
 for row in range(1, edge_orientations.shape[0]-1):  # -----> Vertical edge
 	for col in range(1, edge_orientations.shape[1]-1):
 		if edge_orientations[(row,col)] == 2 or edge_orientations[(row,col)] == 4: # 0
@@ -104,7 +98,7 @@ for row in range(1, edge_orientations.shape[0]-1):  # -----> Vertical edge
 			if (edge_strengths_copy[(row+1, col+1)] < edge_strengths_copy[(row,col)]):
 				edge_strengths[(row+1, col+1)] = 0
 
-
+# check that the current pixel I am looking at is within the image array
 def in_bounds(x, y):
 	lower_bound = 0
 	upper_x_bound = building.shape[0]
@@ -115,9 +109,11 @@ def in_bounds(x, y):
 		return True
 	
 
+# Thresholds determine how many edges will be detected. Weak edges are chained to strong edges
 marked_points = np.zeros(building.shape) #Flower -> .015, .008
 strong_edge_thresh = .02
 weak_edge_thresh = .012
+
 # Iterative dfs to chain weak edges pixels to strong edge pixels
 stack = []
 for x in range(building.shape[0]):
@@ -138,6 +134,7 @@ for x in range(building.shape[0]):
 					building[point] = 1
 					stack.append(point)
 
+# If a point has not yet been marked, then it must be a weak edge that does not chain to a strong edge. Remove it. 
 for x in range(building.shape[0]):
 	for y in range(building.shape[1]):
 		point = (x,y)
