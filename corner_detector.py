@@ -32,6 +32,7 @@ Fx2 = x_gradient**2
 Fy2 = y_gradient**2
 FxFy = x_gradient*y_gradient
 
+# Computer the eigenvalues for each vector. If the smallest one exceeds the threshold, then it is a corner
 M = 4
 corner_thresh = 2
 corner_pixels = []
@@ -56,7 +57,7 @@ points = []
 for item in corner_pixels:
 	points.append(item[0])
 
-
+# function to check that every pixel I look at is within the image array
 def in_bounds(x, y):
 	lower_bound = 0
 	upper_x_bound = image.shape[0]
@@ -66,6 +67,7 @@ def in_bounds(x, y):
 	else:
 		return True
 
+# Removes weak corner neighbors of strong corners
 for p in points:
 	if in_bounds(p[0]-7, p[1]-7) and in_bounds(p[0]+7, p[1]+7):
 		for x in range(p[0]-7, p[0]+7 +1):
@@ -75,6 +77,7 @@ for p in points:
 					points.remove(coor)
 
 
+# Draws an X at every pixel that is determined to be a corner
 for p in points:
 	if in_bounds(p[0]-2, p[1]-2) and in_bounds(p[0]+2, p[1]+2):
 		for x in range(p[0]-2, p[0]+2 +1):
