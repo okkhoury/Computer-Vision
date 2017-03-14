@@ -20,6 +20,9 @@ max_disparity = left_image.shape[0] / 3
 
 # 3d matrix to store the DSI
 DSI = np.zeros((left_image.shape[0], left_image.shape[1], int(max_disparity)))
+
+DSI = DSI.astype(np.float32, copy=False)
+
 print(DSI.shape)
 
 def InBounds(col, d, max_col):
@@ -40,15 +43,20 @@ def sumSquareError(row, col, d):
 
 	return error
 
+print(DSI.dtype)
+
 # Calculate the sum of squared errors at different disparities
 for d in range(int(max_disparity)):
 	for row in range(left_image.shape[0]):
 		for col in range(left_image.shape[1]):
 			val = sumSquareError(row, col, d)
 			DSI[(row, col, d)] = val
+	# Perfrom bilateral filtering at every stage
+	DSI[:, :, d] = cv2.bilateralFilter(DSI[:, :, d], 5, 75, 75)
 
 # Perfrom gaussian filtering at every disparity
-DSI = skimage.filters.gaussian(DSI, sigma=1)
+#DSI = skimage.filters.gaussian(DSI, sigma=1)
+
 
 # Determine the smallest cost at every pixel
 # Start by making every value very large
@@ -72,11 +80,6 @@ for row in range(left_image.shape[0]):
 
 smallest_DSI = smallest_DSI[:, :270]
 print(smallest_DSI.shape)
-
-# Put all of the values in range from 0 to 1, then to 255
-# maxValDSI = np.amax(smallest_DSI)
-# smallest_DSI = np.divide(smallest_DSI, maxValDSI)
-# smallest_DSI = np.multiply(smallest_DSI, 255)
 
 plt.imshow(smallest_DSI)
 plt.show()
