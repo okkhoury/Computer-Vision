@@ -53,6 +53,9 @@ def applyHomography(hMatrix, xB, yB):
 
 	return xA, yA
 
+def is_invertible(a):
+	return a.shape[0] == a.shape[1] and np.linalg.matrix_rank(a) == a.shape[0]
+
 # aPoints and bPoints are both numpy arrays with 4 2D points
 # Returns a 3x3 homography matrix
 def fitHomography(aPoints, bPoints):
@@ -93,7 +96,11 @@ def fitHomography(aPoints, bPoints):
 		equations[(index,6)] = yA1*xB1
 		equations[(index,7)] = yA1*yB1
 
-	solveSystem = np.multiply(np.linalg.solve(equations, b), -1)
+	# check that equations is not a singular matrix
+	if is_invertible(equations):
+		solveSystem = np.multiply(np.linalg.solve(equations, b), -1)
+	else:
+		solveSystem = np.zeros((8,1))
 
 	homography = np.zeros((3,3))
 	homography[(0,0)] = solveSystem[(0,0)] # a
@@ -180,25 +187,3 @@ final_img = composite_warped(imgA, imgB, h)
 
 plt.imshow(final_img)
 plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
